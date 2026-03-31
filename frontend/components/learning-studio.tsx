@@ -46,7 +46,7 @@ export function LearningStudio({
   }) => Promise<string>;
 }) {
   const [topic, setTopic] = useState("Photosynthesis");
-  const [language, setLanguage] = useState(preferredLanguage || SUPPORTED_LANGUAGES[0]);
+  const [language, setLanguage] = useState(preferredLanguage || "English");
   const [learningStyle, setLearningStyle] = useState<LearningStyle>("Storytelling");
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -63,7 +63,7 @@ export function LearningStudio({
   const activeQuestion = useMemo(() => (activeModule ? activeModule.questions[0] : null), [activeModule]);
 
   useEffect(() => {
-    setLanguage(preferredLanguage || SUPPORTED_LANGUAGES[0]);
+    setLanguage(preferredLanguage || "English");
   }, [preferredLanguage]);
 
   useEffect(() => {
@@ -179,6 +179,7 @@ export function LearningStudio({
                 <Input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={t("enterTopic")} />
                 <div className="grid gap-4 md:grid-cols-2">
                   <Select value={language} onChange={(event) => setLanguage(event.target.value)}>
+                    <option value="English">English</option>
                     {SUPPORTED_LANGUAGES.map((item) => (
                       <option key={item} value={item}>
                         {item}

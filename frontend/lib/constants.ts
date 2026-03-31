@@ -7,7 +7,6 @@ export const STORAGE_KEYS = {
 } as const;
 
 export const SUPPORTED_LANGUAGES = [
-  "English",
   "Hindi",
   "Konkani",
   "Kannada",

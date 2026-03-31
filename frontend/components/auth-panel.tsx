@@ -48,7 +48,7 @@ export function AuthPanel({
     email: "",
     password: "",
     age: 16,
-    language: SUPPORTED_LANGUAGES[0],
+    language: "English",
     interests: ""
   });
   const [loginForm, setLoginForm] = useState({
@@ -124,6 +124,7 @@ export function AuthPanel({
               value={signupForm.language}
               onChange={(event) => setSignupForm((current) => ({ ...current, language: event.target.value }))}
             >
+              <option value="English">English</option>
               {SUPPORTED_LANGUAGES.map((language) => (
                 <option key={language} value={language}>
                   {language}

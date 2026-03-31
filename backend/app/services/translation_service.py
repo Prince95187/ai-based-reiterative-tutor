@@ -12,7 +12,6 @@ settings = get_settings()
 
 
 SUPPORTED_LANGUAGES = [
-    "English",
     "Hindi",
     "Konkani",
     "Kannada",
