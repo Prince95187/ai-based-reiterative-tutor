@@ -176,7 +176,14 @@ export function LearningStudio({
                 <CardDescription>{t("startTopicSubtitle")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-                <Input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={t("enterTopic")} />
+                <div className="flex items-center gap-2">
+                  <Input className="flex-1" value={topic} onChange={(event) => setTopic(event.target.value)} placeholder={t("enterTopic")} />
+                  <FloatingVoiceButton
+                    language={language}
+                    onTranscript={(transcript) => setTopic(transcript)}
+                    token={token}
+                  />
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Select value={language} onChange={(event) => setLanguage(event.target.value)}>
                     {SUPPORTED_LANGUAGES.map((item) => (
@@ -244,6 +251,7 @@ export function LearningStudio({
                 onSlideChange={(nextIndex) => setActiveSlideIndex(nextIndex)}
                 slideIndex={activeSlideIndex}
                 language={language}
+                token={token}
               />
 
               <Card>

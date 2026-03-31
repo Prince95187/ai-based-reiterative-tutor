@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, MessageCircle, Volume2 } from "lucide-react";
 
+import { FloatingVoiceButton } from "@/components/floating-voice-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +24,8 @@ export function SlideViewer({
   onAskCoach,
   onSlideChange,
   language,
-  coachLoading
+  coachLoading,
+  token
 }: {
   module: LearningModule;
   slideIndex: number;
@@ -34,6 +36,7 @@ export function SlideViewer({
   onSlideChange: (nextIndex: number) => void;
   language: string;
   coachLoading: boolean;
+  token: string;
 }) {
   const slide = module.slides[slideIndex];
   const { t } = useUiCopy(language);
@@ -101,9 +104,15 @@ export function SlideViewer({
 
           <div className="mt-4 flex flex-col gap-3 md:flex-row">
             <Input
+              className="flex-1"
               value={coachPrompt}
               onChange={(event) => onCoachPromptChange(event.target.value)}
               placeholder={t("askCoachPlaceholder")}
+            />
+            <FloatingVoiceButton
+              language={language}
+              onTranscript={(transcript) => onCoachPromptChange(`${coachPrompt} ${transcript}`.trim())}
+              token={token}
             />
             <Button disabled={coachLoading || !coachPrompt.trim()} onClick={onAskCoach} variant="secondary">
               {coachLoading ? t("asking") : t("ask")}
