@@ -97,6 +97,12 @@ export const api = {
   fetchSummary(token: string) {
     return request<DashboardSummary>("/dashboard/summary", {}, token);
   },
+  listTopics(token: string) {
+    return request<string[]>("/topics", {}, token);
+  },
+  fetchTopicModules(token: string, topicName: string) {
+    return request<GenerateModulesResponse>(`/topic/${encodeURIComponent(topicName)}`, {}, token);
+  },
   generateModules(
     token: string,
     payload: { topic: string; language: string; learning_style: LearningStyle }
@@ -112,7 +118,7 @@ export const api = {
   },
   evaluateAnswer(
     token: string,
-    payload: { module_id: number; question: Question; user_answer: string }
+    payload: { module_id: number; question: Question; question_index: number; question_count: number; user_answer: string }
   ) {
     return request<EvaluationResponse>(
       "/evaluate-answer",

@@ -15,16 +15,30 @@ class TutorService:
         user: User,
         payload: GenerateModulesRequest,
         provider_keys: dict[str, str] | None = None,
-    ) -> list[LearningModule]:
-        generated_modules = await ai_service.generate_modules(payload, provider_keys=provider_keys)
+    ) -> tuple[list[LearningModule], str]:
+        generated_modules, source = await ai_service.generate_modules(payload, provider_keys=provider_keys)
 
-        existing_modules = db.scalars(select(LearningModule).where(LearningModule.user_id == user.id)).all()
-        existing_progress = db.scalars(select(ProgressRecord).where(ProgressRecord.user_id == user.id)).all()
-        for record in existing_progress:
-            db.delete(record)
-        for module in existing_modules:
-            db.delete(module)
-        db.flush()
+        # Only delete existing modules and progress for the SAME topic
+        existing_modules = db.scalars(
+            select(LearningModule).where(
+                LearningModule.user_id == user.id, 
+                LearningModule.topic == payload.topic
+            )
+        ).all()
+        
+        if existing_modules:
+            existing_ids = [m.id for m in existing_modules]
+            existing_progress = db.scalars(
+                select(ProgressRecord).where(
+                    ProgressRecord.user_id == user.id,
+                    ProgressRecord.module_id.in_(existing_ids)
+                )
+            ).all()
+            for record in existing_progress:
+                db.delete(record)
+            for module in existing_modules:
+                db.delete(module)
+            db.flush()
 
         persisted: list[LearningModule] = []
         for module_schema in generated_modules:
@@ -59,7 +73,22 @@ class TutorService:
         db.commit()
         for module in persisted:
             db.refresh(module)
-        return persisted
+        return persisted, source
+
+    def list_topics(self, db: Session, user: User) -> list[str]:
+        topics = db.scalars(
+            select(LearningModule.topic)
+            .where(LearningModule.user_id == user.id)
+            .distinct()
+        ).all()
+        return list(topics)
+
+    def get_topic_modules(self, db: Session, user: User, topic: str) -> list[LearningModule]:
+        return db.scalars(
+            select(LearningModule)
+            .where(LearningModule.user_id == user.id, LearningModule.topic == topic)
+            .order_by(LearningModule.module_index)
+        ).all()
 
     def build_dashboard_summary(self, db: Session, user: User) -> DashboardSummaryResponse:
         modules = db.scalars(

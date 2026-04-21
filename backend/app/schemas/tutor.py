@@ -43,11 +43,14 @@ class GenerateModulesResponse(BaseModel):
     language: str
     learning_style: LearningStyle
     modules: list[ModuleSchema]
+    generation_source: str = "ai"  # "gemini" | "openai" | "fallback"
 
 
 class EvaluationRequest(BaseModel):
     module_id: int
     question: QuestionSchema
+    question_index: int = Field(ge=0, default=0)
+    question_count: int = Field(ge=1, default=1)
     user_answer: str = Field(min_length=1, max_length=1000)
 
 

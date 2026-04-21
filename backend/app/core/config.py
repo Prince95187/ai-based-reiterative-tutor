@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24
     database_url: str = "sqlite:///./tutor.db"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-1.5-flash"
     openai_api_key: str = ""
-    openai_model: str = "gpt-4.1-mini"
+    openai_model: str = "gpt-4o-mini"
     google_translate_api_key: str = ""
     elevenlabs_api_key: str = ""
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"

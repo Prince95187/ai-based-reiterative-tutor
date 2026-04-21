@@ -48,6 +48,7 @@ export type GenerateModulesResponse = {
   language: string;
   learning_style: LearningStyle;
   modules: LearningModule[];
+  generation_source?: string;
 };
 
 export type EvaluationResponse = {

@@ -78,7 +78,7 @@ async def generate_modules(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> GenerateModulesResponse:
-    persisted = await tutor_service.generate_and_store_modules(
+    persisted, source = await tutor_service.generate_and_store_modules(
         db, current_user, payload, provider_keys=provider_keys_from_request(request)
     )
     modules = [
@@ -101,6 +101,7 @@ async def generate_modules(
         language=payload.language,
         learning_style=payload.learning_style,
         modules=modules,
+        generation_source=source,
     )
 
 
@@ -132,17 +133,24 @@ async def evaluate_answer(
         expected_answer=payload.question.expected_answer,
         user_answer=payload.user_answer,
         concept=payload.question.concept,
+        language=module.language,
         provider_keys=provider_keys_from_request(request),
     )
 
+    is_last_question = payload.question_index >= payload.question_count - 1
     progress.attempts += 1
-    progress.status = "completed" if evaluation["correct"] else "needs_review"
+    progress.status = (
+        "completed" if evaluation["correct"] and is_last_question
+        else "ready" if evaluation["correct"]
+        else "needs_review"
+    )
     progress.score = round(evaluation["confidence"] * 100, 2)
     progress.xp_earned += evaluation["xp_awarded"]
 
     history = list(progress.answer_history or [])
     history.append(
         {
+            "question_index": payload.question_index,
             "question": payload.question.prompt,
             "answer": payload.user_answer,
             "correct": evaluation["correct"],
@@ -155,6 +163,10 @@ async def evaluate_answer(
         weak_concepts = set(progress.weak_concepts or [])
         weak_concepts.add(payload.question.concept)
         progress.weak_concepts = sorted(weak_concepts)
+    else:
+        progress.weak_concepts = [
+            concept for concept in list(progress.weak_concepts or []) if concept != payload.question.concept
+        ]
 
     db.commit()
 
@@ -167,6 +179,49 @@ def dashboard_summary(
     current_user: User = Depends(get_current_user),
 ) -> DashboardSummaryResponse:
     return tutor_service.build_dashboard_summary(db, current_user)
+
+
+@router.get("/topics")
+def list_topics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[str]:
+    return tutor_service.list_topics(db, current_user)
+
+
+@router.get("/topic/{topic_name}", response_model=GenerateModulesResponse)
+def get_topic_modules(
+    topic_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> GenerateModulesResponse:
+    persisted = tutor_service.get_topic_modules(db, current_user, topic_name)
+    if not persisted:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    first = persisted[0]
+    modules = [
+        ModuleSchema(
+            id=module.id,
+            title=module.title,
+            topic=module.topic,
+            language=module.language,
+            learning_style=module.learning_style,
+            module_index=module.module_index,
+            slides=module.content,
+            narration_text=module.narration_text,
+            questions=module.questions,
+            xp_reward=module.xp_reward,
+        )
+        for module in persisted
+    ]
+    return GenerateModulesResponse(
+        topic=topic_name,
+        language=first.language,
+        learning_style=first.learning_style,
+        modules=modules,
+        generation_source="database",
+    )
 
 
 @router.post("/transcribe-audio", response_model=TranscriptionResponse)
